@@ -1,9 +1,10 @@
-    UNIVERSIDADE ESTADUAL DO RIO GRANDE DO NORTE (UERN)
+
+UNIVERSIDADE ESTADUAL DO RIO GRANDE DO NORTE (UERN)
 
 
-                  MOSSORÓ, RN
+MOSSORÓ, RN
 
-                  Julho, 2024
+Julho, 2024
 
 
 Docente: 
