@@ -2,11 +2,11 @@
 #include <stdlib.h>
 main(){
 	
-	int continuar;
+	char continuar;
 	char jogador[20];
 	printf("******************\n");
 	printf("*                *\n");
-	printf("*  Game do Dino  *\n");
+	printf("*      LUNO      *\n");
 	printf("*                *\n");
 	printf("******************\n");
 	
@@ -14,41 +14,39 @@ main(){
 	gets(jogador);
 	system("cls");
 	printf("Seja bem-vindo(a), %s!\n", jogador);
-	printf("Hoje voce sera encarregado de uma missao\n");
-	printf("\nAperte 1 para continuar\n");
-	scanf("%d", &continuar);
-	if(continuar == 1 ){
+	printf("Hoje voce sera encarregado(a) de uma missao.\n");
+	printf("\nPressione 'Enter' para continuar\n");
+	scanf("%c", &continuar);
+	if(continuar == '\0' ){
 		system("cls");
 	}else{
 		system("cls");
 	}
-	printf("Este eh Joaozinho, ele eh aluno de Ciencia da Computacao na UERN\n");
+	printf("Este eh Luno, ele eh aluno de Ciencia da Computacao na UERN.\n");
 	printf("  O  \n");
 	printf(" /|) \n");
 	printf(" _|_\n");
-	printf("\nUltimamente, suas notas tem ido de mal a pior :( \n");
-	printf("Por isso, a sua funcao sera ajuda-lo a se formar :D \n");
+	printf("\nUltimamente, suas notas tem ido de mal a pior. :( \n");
+	printf("E como um bom professor, a sua funcao sera ajuda-lo a se formar! :D \n");
 	
-	printf("\nAperte 1 para continuar\n");
-	scanf("%d", &continuar);
-	if(continuar == 1 ){
+	printf("\nPressione 'Enter' para continuar\n");
+	scanf("%c", &continuar);
+	if(continuar == '\0' ){
 		system("cls");
 	}else{
 		system("cls");
 	}
 	
 	printf("Portanto, voce devera desviar dos obstaculos na corrida para o diploma.\n");
-	printf("Joaozinho ira correr sozinho, voce so precisara auxilia-lo a ultrapassar os professores malignos.\n");
+	printf("Luno ira correr sozinho, voce so precisara auxilia-lo a ultrapassar as provas e atividades.\n");
 	printf("Para desviar, basta pressionar a tecla de espaco do computador.\n");
-	printf("\nCaso Joaozinho esbarre em algum obstaculo, voce perde o jogo.\n");
-	printf("\nPressione 1 para iniciar o jogo\n");
-	scanf("%d", &continuar);
-	if(continuar == 1 ){
+	printf("\nCaso Luno esbarre em algum obstaculo, voce perde o jogo.\n");
+	printf("\nPressione 'Enter' para continuar\n");
+	scanf("%c", &continuar);
+	if(continuar == '\0' ){
 		system("cls");
 	}else{
 		system("cls");
 	}
-	
-	
 	
 }
