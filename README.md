@@ -11,9 +11,9 @@ Docente:
 Ceres Germana
 
 Discentes:
-Ana Caroliny Virgilio de Medeiros (GOvernador Dix-Sept Rosado),
+Ana Caroliny Virgilio de Medeiros (Governador Dix-Sept Rosado),
 Aretuza Raquely de Oliveira Costa (Upanema),
-Vinicius Samuel Gomes Miranda ();
+Vinicius Samuel Gomes Miranda (Severiano Melo);
 
 
 SOBRE:
