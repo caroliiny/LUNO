@@ -1,3 +1,4 @@
+//RODANDO
 #include <stdio.h>
 #include <allegro5/allegro.h> //padrao allegro
 #include <allegro5/allegro_primitives.h> //formas primitivas, como o retangulo do botao
