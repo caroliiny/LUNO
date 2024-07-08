@@ -1,4 +1,3 @@
-//RODANDO
 #include <stdio.h>
 #include <allegro5/allegro.h> //padrao allegro
 #include <allegro5/allegro_primitives.h> //formas primitivas, como o retangulo do botao
@@ -103,12 +102,15 @@ int main(int argc, char **argv) {
         } else if (evento.type == ALLEGRO_EVENT_TIMER) {
             desenha = true;
 
-        } else if (evento.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN) {
-            if (clicado(&Botao_jogar, evento.mouse.x, evento.mouse.y)) { //se jogar for clicado
-                printf("Botão jogar clicado!\n");
-            } else if (clicado(&Botao_sobre, evento.mouse.x, evento.mouse.y)) { //se sobre for clicado
-                printf("Botão sobre clicado!\n");
+        } else if (evento.type == ALLEGRO_EVENT_MOUSE_AXES) {
+
+            if (clicado(&Botao_jogar, evento.mouse.x, evento.mouse.y)) {
+            //abrir_jogo();
+            } else if (clicado(&Botao_sobre, evento.mouse.x, evento.mouse.y)) {
+                //abrir_sobre
             }
+
+            desenha = true;
         }
 
         if (desenha && al_is_event_queue_empty(event_queue)) {
