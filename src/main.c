@@ -10,7 +10,8 @@
 #include <allegro5/allegro_acodec.h>
 #include <allegro5/allegro_audio.h>
 
-// ================================ STRUCT BOTAO ===================================================================================================================================================
+
+// ================================= STRUCT BOTAO ===================================================================================================================================================
 typedef struct Botao { //struct comum para todos os botoes que vao haver no jogo
     int x, y, largura, altura;
     ALLEGRO_COLOR cor; //para manipulacao das cores dos botoes
@@ -20,7 +21,7 @@ typedef struct Botao { //struct comum para todos os botoes que vao haver no jogo
 } Botao;
 
 
-// ======================================= FUNCOES =================================================================================================================================================
+// ======================================== FUNCOES =================================================================================================================================================
 int main(int argc, char **argv);
 int looping(ALLEGRO_DISPLAY *janela,  ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_TIMER *timer); //para o looping de carregamento inicial
 void MENU(ALLEGRO_DISPLAY *janela, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_TIMER *timer); //para abrir o menu
@@ -33,30 +34,25 @@ bool clicado(Botao *botao, int mouse_x, int mouse_y); //para verificar se o bota
 void desenha_Botao(Botao *botao); //para desenhar o botao na tela
 void mudar_corB(Botao *botao, ALLEGRO_BITMAP *novo_fundo, bool clicado);
 
-bool inicializar_audio() {
-    if (!al_install_audio()) {
-        fprintf(stderr, "Falha ao inicializar o sistema de áudio.\n");
-        return false;
-    }
+ALLEGRO_SAMPLE *trilha_sonora = NULL;
+ALLEGRO_SAMPLE *clique = NULL;
+ALLEGRO_SAMPLE *sompulo = NULL;
+ALLEGRO_SAMPLE *perdeu = NULL;
+ALLEGRO_SAMPLE *ganhou = NULL;
 
-    if (!al_init_acodec_addon()) {
-        fprintf(stderr, "Falha ao inicializar o addon de codecs de áudio.\n");
-        return false;
-    }
-
-    if (!al_reserve_samples(14)) {
-        fprintf(stderr, "Falha ao reservar canais de áudio.\n");
-        return false;
-    }
-
-    return true;
-}
+ALLEGRO_SAMPLE_INSTANCE *inst_trilha_sonora = NULL;
+ALLEGRO_SAMPLE_INSTANCE *inst_clique = NULL;
+ALLEGRO_SAMPLE_INSTANCE *inst_pulo = NULL;
+ALLEGRO_SAMPLE_INSTANCE *inst_perdeu = NULL;
+ALLEGRO_SAMPLE_INSTANCE *inst_ganhou = NULL;
 
 //============================================================= MAIN ================================================================================================================================
 int main(int argc, char **argv) { //funcao main (principal), contendo todas as partes comuns e principais do jogo, evitando redundancia de codigo
     if (!al_init()) { //verificando se o allegro iniciou corretamente
         fprintf(stderr, "Falha ao inicializar Allegro.\n");
     }
+
+//--------------- INICIALIZAÇÂO DE ADDONS E INSTALAÇÂO ---------------------------------
 
     al_init_primitives_addon(); //inicia o addon das formas primitivas
     al_init_image_addon(); // Inicializa addon de imagens
@@ -66,31 +62,43 @@ int main(int argc, char **argv) { //funcao main (principal), contendo todas as p
     al_install_mouse();    // Instala o mouse
     al_init_acodec_addon();
     al_install_audio();
-    al_reserve_samples(1);
+    al_reserve_samples(10);
 
     ALLEGRO_DISPLAY *janela = al_create_display(1500, 800); //criando a janela com o nome "janela" e definindo seu tamanho
-    if (!janela) { //se nao der certo criar a janela, aparece essa mensagem no terminal
-        fprintf(stderr, "Falha ao criar a janela.\n");
-    }
+
     int largura_janela = al_get_display_width(janela); 
     int altura_janela = al_get_display_height(janela);
 
+    bool tocar = false;
+
+
     ALLEGRO_TIMER *timer = al_create_timer(1.0 / 60); //criando o temporizador chamado "timer" e definindo seus ciclos de tempo
-    if (!timer) {
-        fprintf(stderr, "Falha ao criar o timer.\n");
-        al_destroy_display(janela);
-        return -1;
-    }
 
     ALLEGRO_EVENT_QUEUE *event_queue = al_create_event_queue(); //cria eventos (como  intercoes com o mouse, teclado etc)
-    if (!event_queue) {
-        fprintf(stderr, "Falha ao criar a fila de eventos.\n");
-        al_destroy_timer(timer);
-        al_destroy_display(janela);
-        return -1;
-    }
+   
+//------------------------- TRILHA SONORA -------------------------------------------------
+    trilha_sonora = al_load_sample("/home/Carol/LUNO/acessorios/sons/musica.wav");
+    perdeu = al_load_sample("/home/Carol/LUNO/acessorios/sons/som-gamer-over.wav");
+    ganhou = al_load_sample("/home/Carol/LUNO/acessorios/sons/som-vitoria.wav");
+    clique = al_load_sample("/home/Carol/LUNO/acessorios/sons/click.wav");
 
-    //registrando os eventos da janela, do temporizador, do teclado e do mouse
+    inst_trilha_sonora = al_create_sample_instance(trilha_sonora);
+    inst_perdeu = al_create_sample_instance(perdeu);
+    inst_ganhou = al_create_sample_instance(ganhou);
+
+    al_attach_sample_instance_to_mixer(inst_trilha_sonora, al_get_default_mixer());
+    al_attach_sample_instance_to_mixer(inst_perdeu, al_get_default_mixer());
+    al_attach_sample_instance_to_mixer(inst_ganhou, al_get_default_mixer());
+
+    al_set_sample_instance_playmode(inst_trilha_sonora, ALLEGRO_PLAYMODE_LOOP);//tocar em loop
+    al_set_sample_instance_playmode(inst_perdeu, ALLEGRO_PLAYMODE_ONCE);//tocar em loop
+    al_set_sample_instance_playmode(inst_ganhou, ALLEGRO_PLAYMODE_ONCE);//tocar em loo
+
+    al_set_sample_instance_gain(inst_trilha_sonora, 0.4); //0.4 eh o volume da trilha sonora
+    al_set_sample_instance_gain(inst_perdeu, 0.4); //0.4 eh o volume da trilha sonora
+    al_set_sample_instance_gain(inst_ganhou, 0.4); //0.4 eh o volume da trilha sonora
+
+    // --------------- REGISTRO DE EVENTOS ----------------------------------------------------
     al_register_event_source(event_queue, al_get_display_event_source(janela));
     al_register_event_source(event_queue, al_get_timer_event_source(timer));
     al_register_event_source(event_queue, al_get_keyboard_event_source());
@@ -101,10 +109,22 @@ int main(int argc, char **argv) { //funcao main (principal), contendo todas as p
         fprintf(stderr, "Erro ao executar o looping.\n");
     }
 
-//encerrando eventos, timer e a janela
+//-------- DESTRUINDO EVENTOS ------------------------------
+
     al_destroy_event_queue(event_queue); 
-    al_destroy_timer(timer);
+    al_destroy_timer(timer); 
     al_destroy_display(janela);
+    al_destroy_sample(trilha_sonora);
+    al_destroy_sample(clique);
+    al_destroy_sample(perdeu);
+    al_destroy_sample(ganhou);
+    al_destroy_sample(clique);
+
+    al_destroy_sample_instance(inst_trilha_sonora);
+    al_destroy_sample_instance(inst_clique);
+    al_destroy_sample_instance(inst_perdeu);
+    al_destroy_sample_instance(inst_ganhou);
+    al_destroy_sample_instance(inst_pulo);
 
     return 0;
 }
@@ -134,6 +154,7 @@ int looping(ALLEGRO_DISPLAY *janela, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_T
     al_set_window_title(janela, "LUNO - Carregando..."); // Define o título da janela
 
     ALLEGRO_SAMPLE *somClique = al_load_sample("/home/Carol/LUNO/acessorios/sons/click.wav");
+;
     
     // Carrega os bitmaps de fundo
     ALLEGRO_BITMAP *fundos[] = {
@@ -198,20 +219,29 @@ int looping(ALLEGRO_DISPLAY *janela, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_T
     for (int i = 0; i < num_fundos; ++i) {
         al_destroy_bitmap(fundos[i]);
     }
+    al_destroy_sample(somClique);
 
     return 0;
 }
+
 
 // ============================================================================================ MENU ==================================================================================================
 void MENU(ALLEGRO_DISPLAY *janela, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_TIMER *timer) { //iniciando o menu
     al_set_window_title(janela, "LUNO - Menu"); //titulo da janela
 
-        
-    if (!inicializar_audio()) {
-        return;
-    }
 
     ALLEGRO_SAMPLE *somClique = al_load_sample("/home/Carol/LUNO/acessorios/sons/click.wav");
+
+    ALLEGRO_SAMPLE_INSTANCE *instancia_sample = al_create_sample_instance(somClique);
+
+    // Ajuste o ganho (volume) para 1.5 vezes o volume original
+    al_set_sample_instance_gain(instancia_sample, 3.5);
+
+    // Anexe a instância do sample ao mixer padrão
+    al_attach_sample_instance_to_mixer(instancia_sample, al_get_default_mixer());
+
+    // Tocar o sample
+    al_play_sample_instance(instancia_sample);
 
     if (!somClique) {
         fprintf(stderr, "Falha ao carregar som: /home/Carol/LUNO/acessorios/sons/click.wav\n");
@@ -270,6 +300,7 @@ void MENU(ALLEGRO_DISPLAY *janela, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_TIM
 
     while (rodando) { //enquando estiver rodando (rodando foi definido como true)
         ALLEGRO_EVENT evento; //criou um evento
+        al_play_sample_instance(inst_trilha_sonora);
         al_wait_for_event(event_queue, &evento); //esperar pelo evento
 
         if (evento.type == ALLEGRO_EVENT_DISPLAY_CLOSE) { //se o evento for "fechar a janela", para de rodar
@@ -321,15 +352,13 @@ void MENU(ALLEGRO_DISPLAY *janela, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_TIM
 
 }
 
-//================================================================== HISTORIA =========================================================================================================================
+//=================================================================== HISTORIA =========================================================================================================================
 void HISTORIA(ALLEGRO_DISPLAY *janela, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_TIMER *timer) {
     al_set_window_title(janela, "LUNO - Historia");
 
-    if (!inicializar_audio()) {
-        return;
-    }
 
     ALLEGRO_SAMPLE *Digitando = al_load_sample("/home/Carol/LUNO/acessorios/sons/digitando.wav");
+
     
     if (!Digitando) {
         fprintf(stderr, "Falha ao carregar som: /home/Carol/LUNO/acessorios/sons/digitando.wav\n");
@@ -400,7 +429,9 @@ void HISTORIA(ALLEGRO_DISPLAY *janela, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO
                     fundo = fundo9; //se estiver na ultima tela da historia, o usuario eh direcionado ao jogo
                 }else if(fundo == fundo9){
                     rodando = false;
+                    al_stop_sample_instance(inst_trilha_sonora);
                     JOGO(janela, event_queue, timer);
+
                 }
                 
             }
@@ -481,7 +512,10 @@ bool colisao(float ax, float ay, float aw, float ah, float bx, float by, float b
     return (ax + aw > bx && ax < bx + bw && ay + ah > by && ay < by + bh);
 }
 
+//======================================== JOGO ============================================================
 void JOGO(ALLEGRO_DISPLAY *janela, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_TIMER *timer) {
+
+    al_set_window_title(janela,"LUNO - Jogando...");
     // Inicialização básica do Allegro
     if (!al_init()) {
         fprintf(stderr, "Falha ao inicializar Allegro.\n");
@@ -500,19 +534,8 @@ void JOGO(ALLEGRO_DISPLAY *janela, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_TIM
         al_destroy_event_queue(event_queue);
     }
 
-         
-    if (!inicializar_audio()) {
-        return;
-    }
 
-    ALLEGRO_SAMPLE *somPulo = al_load_sample("/home/Carol/LUNO/acessorios/sons/click.wav");
-    ALLEGRO_SAMPLE *gameover = al_load_sample("/home/Carol/LUNO/acessorios/sons/som-game-over.wav");
-    
-    if (!somPulo || !gameover) {
-        fprintf(stderr, "Falha ao carregar som: /home/Carol/LUNO/acessorios/sons/click.wav\n");
-        return;
-    }
-        
+    ALLEGRO_SAMPLE *somPulo = al_load_sample("/home/Carol/LUNO/acessorios/sons/som-pulo.wav");     
 
     // Carrega imagens do fundo e do personagem Luno
     ALLEGRO_BITMAP* fundo_jogo = al_load_bitmap("/home/Carol/LUNO/acessorios/fundos/fundolunogame.jpg");
@@ -650,12 +673,15 @@ void JOGO(ALLEGRO_DISPLAY *janela, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_TIM
 
     int score = 0;  // Variável para armazenar o score
     bool desenhar_score = true; 
+    bool rodando = true;
 
     al_init_font_addon();
     al_init_ttf_addon();
     ALLEGRO_FONT* fonte = al_load_ttf_font("/home/carol/LUNO/acessorios/DejaVuSans-Bold.ttf", 32, 0);
 
     while (!luno.jogo_encerrado) {
+
+        al_play_sample_instance(inst_trilha_sonora);
         ALLEGRO_EVENT evento;
         al_wait_for_event(fila_eventos, &evento);
 
@@ -746,7 +772,9 @@ void JOGO(ALLEGRO_DISPLAY *janela, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_TIM
 
             // Verifica colisão com o obstáculo de vitória
             if (colidiu_com_vitoria || luno_na_vitoria) {
+                rodando = false;
                 luno.jogo_ganho = true;
+                VITORIA(janela, event_queue, timer);
                 printf("Luno ganhou!\n");
             }
             
@@ -783,8 +811,9 @@ void JOGO(ALLEGRO_DISPLAY *janela, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_TIM
 
                     // Verifica colisão entre Luno e obstáculo
                     if (colisao(luno.x, luno.y, luno.largura, luno.altura, obstaculos[i].x, obstaculos[i].y, obstaculos[i].largura, obstaculos[i].altura)) {
+                        rodando = false;
                         luno.game_over = true; 
-                        al_play_sample(gameover, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
+                        al_stop_sample_instance(inst_trilha_sonora);
                         game_over(janela, event_queue, timer);
                         printf("Luno perdeu!\n");
                         // Aqui você pode implementar a lógica para o que acontece quando Luno colide com um obstáculo
@@ -845,17 +874,24 @@ void JOGO(ALLEGRO_DISPLAY *janela, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_TIM
     al_destroy_bitmap(imagem_vitoria); 
     al_destroy_display(janela);
     al_destroy_event_queue(fila_eventos);
-
+    al_destroy_sample(somPulo);
+    al_uninstall_audio();
 }
+
+
 //======================================================================================== GAME OVER ====================================================================================================
 void game_over(ALLEGRO_DISPLAY *janela, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_TIMER *timer){
+
     al_set_window_title(janela, "LUNO - GAME OVER");
 
-    if (!inicializar_audio()) {
-        return;
-    }
-
     ALLEGRO_SAMPLE *somClique = al_load_sample("/home/Carol/LUNO/acessorios/sons/click.wav");
+
+    // ---------------------------- Musica GAME OVER ----------------------------
+   
+    inst_perdeu = al_create_sample_instance(perdeu);
+    al_attach_sample_instance_to_mixer(inst_perdeu, al_get_default_mixer());
+    al_set_sample_instance_playmode(inst_perdeu, ALLEGRO_PLAYMODE_ONCE);//tocar em loop
+    al_set_sample_instance_gain(inst_perdeu, 0.4); //0.4 eh o volume da musica
     
     if (!somClique) {
         fprintf(stderr, "Falha ao carregar som: /home/Carol/LUNO/acessorios/sons/click.wav\n");
@@ -899,6 +935,7 @@ void game_over(ALLEGRO_DISPLAY *janela, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGR
     al_start_timer(timer);
 
     while (rodando) { //enquando estiver rodando (rodando foi definido como true)
+        al_play_sample_instance(inst_perdeu);
         ALLEGRO_EVENT evento; //criou um evento
         al_wait_for_event(event_queue, &evento); //esperar pelo evento
 
@@ -908,12 +945,14 @@ void game_over(ALLEGRO_DISPLAY *janela, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGR
             vendo_tela = true;
         } else if (evento.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN) { //interacoes com o mouse
             if (clicado(&Jogue, evento.mouse.x, evento.mouse.y)) { //se o botao clicado for o jogar do menu
+                al_play_sample(somClique, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
                 mudar_corB(&Jogue, botaoJogue, true);
                 rodando = false;
                 JOGO(janela, event_queue, timer); 
                 //para de rodar a janela do menu
                 printf("Jogar novamente"); //mensagem de confirmacao no terminal
             } else if (clicado(&ir_menu, evento.mouse.x, evento.mouse.y)) { //se o clicado for o botao sobre
+                al_play_sample(somClique, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
                 mudar_corB(&ir_menu, botaoIrmenu, true);
                 rodando = false; //para de rodar
                 printf("Voltar pra menu\n");
@@ -938,24 +977,29 @@ void game_over(ALLEGRO_DISPLAY *janela, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGR
     al_destroy_bitmap(fundo);
     al_destroy_bitmap(botaoJogue);
     al_destroy_bitmap(botaoIrmenu);
+    al_destroy_sample(somClique);
+    al_destroy_sample(perdeu);
+    al_destroy_sample_instance(inst_perdeu);
+    al_uninstall_audio();
 }
 
+
+// ==================================================== VITORIA ==========================================================================================
 void VITORIA(ALLEGRO_DISPLAY *janela, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_TIMER *timer){
     al_set_window_title(janela, "LUNO - VITORIA!!!!!!!");
 
-    if (!inicializar_audio()) {
-        return;
-    }
 
     ALLEGRO_SAMPLE *somVitoria = al_load_sample("/home/Carol/LUNO/acessorios/sons/som-vitoria.wav");
-    
+    ALLEGRO_SAMPLE *somClique = al_load_sample("/home/Carol/LUNO/acessorios/sons/click.wav");
+
     if (!somVitoria) {
         fprintf(stderr, "Falha ao carregar som: /home/Carol/LUNO/acessorios/sons/som-vitoria.wav\n");
         return;
     }
 
     ALLEGRO_BITMAP *fundo = al_load_bitmap("/home/Carol/LUNO/acessorios/fundos/vitoria.jpg");
-     ALLEGRO_BITMAP *botaovoltar = al_load_bitmap("/home/Carol/LUNO/acessorios/fundos/vitoria.jpg");
+    ALLEGRO_BITMAP *cor_normal = fundo;
+    ALLEGRO_BITMAP *cor_alterada = al_load_bitmap("/home/Carol/LUNO/acessorios/botoes/botaoVoltar.png");
 
     int largura_janela = al_get_display_width(janela);
     int altura_janela = al_get_display_height(janela);
@@ -965,7 +1009,9 @@ void VITORIA(ALLEGRO_DISPLAY *janela, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_
         altura_janela / 2 - 150, //aqui eh o Y
         330, //tamanho do x do botao
         60, //tamanho do y do botao
-        al_map_rgb(0, 0,0), // cor invisível
+        al_map_rgba(0, 0,0,0), // cor invisível
+        cor_normal,
+        cor_alterada,
         false, //nao foi clicado ainda
     };
 
@@ -984,7 +1030,7 @@ void VITORIA(ALLEGRO_DISPLAY *janela, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_
             vendo_tela = true;
         } else if (evento.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN) { //interacoes com o mouse
             if (clicado(&voltar, evento.mouse.x, evento.mouse.y)) { //se o botao clicado for o jogar do menu
-                mudar_corB(&voltar, botaovoltar, true);
+                mudar_corB(&voltar, cor_alterada, true);
                 rodando = false;
                 MENU(janela, event_queue, timer); 
                 //para de rodar a janela do menu
@@ -1007,7 +1053,8 @@ void VITORIA(ALLEGRO_DISPLAY *janela, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_
     }
 
     al_destroy_bitmap(fundo);
-    al_destroy_bitmap(botaovoltar);
+    al_destroy_bitmap(cor_alterada);
+  
 
 }
 
@@ -1015,12 +1062,8 @@ void VITORIA(ALLEGRO_DISPLAY *janela, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_
 void SOBRE(ALLEGRO_DISPLAY *janela, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_TIMER *timer) { //codigo da janela SOBRE
     al_set_window_title(janela, "LUNO - Sobre");
 
-    if (!inicializar_audio()) {
-        return;
-    }
-
     ALLEGRO_SAMPLE *somClique = al_load_sample("/home/Carol/LUNO/acessorios/sons/click.wav");
-    
+
     if (!somClique) {
         fprintf(stderr, "Falha ao carregar som: /home/Carol/LUNO/acessorios/sons/click.wav\n");
         return;
